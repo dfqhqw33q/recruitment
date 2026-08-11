@@ -9,13 +9,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('job_postings', function (Blueprint $table) {
-            $table->json('screening_questions')->nullable()->after('qualifications');
+            $table->json('screening_questions')->nullable();
         });
 
         Schema::table('applications', function (Blueprint $table) {
-            $table->json('screening_answers')->nullable()->after('custom_notes');
-            $table->boolean('is_knocked_out')->default(false)->after('screening_answers');
-            $table->string('knockout_reason')->nullable()->after('is_knocked_out');
+            $table->json('screening_answers')->nullable();
+            $table->boolean('is_knocked_out')->default(false);
+            $table->string('knockout_reason')->nullable();
         });
     }
 

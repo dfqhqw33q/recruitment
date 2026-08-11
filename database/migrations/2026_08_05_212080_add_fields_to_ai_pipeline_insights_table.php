@@ -9,12 +9,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('ai_pipeline_insights', function (Blueprint $table) {
-            $table->string('priority')->nullable()->after('category');
-            $table->text('summary')->nullable()->after('priority');
-            $table->json('evidence')->nullable()->after('summary');
-            $table->text('impact')->nullable()->after('evidence');
-            $table->text('recommendation')->nullable()->after('impact');
-            $table->text('explanation')->nullable()->after('recommendation');
+            $table->string('priority')->nullable();
+            $table->text('summary')->nullable();
+            $table->json('evidence')->nullable();
+            $table->text('impact')->nullable();
+            $table->text('recommendation')->nullable();
+            $table->text('explanation')->nullable();
         });
     }
 

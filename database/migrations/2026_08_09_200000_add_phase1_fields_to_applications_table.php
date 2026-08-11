@@ -9,9 +9,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('applications', function (Blueprint $table) {
-            $table->string('reference_code', 30)->nullable()->unique()->after('id');
-            $table->string('custom_resume_path')->nullable()->after('cover_letter');
-            $table->text('custom_notes')->nullable()->after('custom_resume_path');
+            $table->string('reference_code', 30)->nullable()->unique();
+            $table->string('custom_resume_path')->nullable();
+            $table->text('custom_notes')->nullable();
         });
     }
 

@@ -9,12 +9,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('ai_pipeline_insights', function (Blueprint $table) {
-            $table->string('data_signature', 64)->nullable()->after('sort_order');
-            $table->timestamp('generated_at')->nullable()->after('data_signature');
+            $table->string('data_signature', 64)->nullable();
+            $table->timestamp('generated_at')->nullable();
         });
     }
 
-public function down(): void
+    public function down(): void
     {
         Schema::table('ai_pipeline_insights', function (Blueprint $table) {
             $table->dropColumn(['data_signature', 'generated_at']);
