@@ -26,3 +26,4 @@ Thumbs.db
 !.env.example
 
 .env.mysql.backup
+.env

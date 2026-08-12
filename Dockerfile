@@ -72,4 +72,4 @@ RUN rm -f /var/www/html/public/hot \
 
 EXPOSE 10000
 
-CMD ["sh", "-c", "php artisan migrate --force && php artisan optimize:clear && php artisan config:cache && php artisan route:cache && php artisan view:cache && sed -i \"s/Listen 80/Listen ${PORT:-10000}/\" /etc/apache2/ports.conf && sed -i \"s/:80>/:${PORT:-10000}>/\" /etc/apache2/sites-available/000-default.conf && apache2-foreground"]
+CMD ["sh", "-c", "php artisan migrate --force && php artisan db:seed --class=RoleAndPermissionSeeder --force && php artisan db:seed --class=UserSeeder --force && php artisan optimize:clear && php artisan config:cache && php artisan route:cache && php artisan view:cache && sed -i \"s/Listen 80/Listen ${PORT:-10000}/\" /etc/apache2/ports.conf && sed -i \"s/:80>/:${PORT:-10000}>/\" /etc/apache2/sites-available/000-default.conf && apache2-foreground"]
