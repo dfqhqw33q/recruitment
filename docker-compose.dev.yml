@@ -1,0 +1,70 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: recruitsmart_dev
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_KEY: ${APP_KEY}
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-recruitsmart_dev}
+      DB_USERNAME: ${DB_USERNAME:-recruit}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      QUEUE_CONNECTION: sync
+      CACHE_STORE: array
+      SESSION_DRIVER: file
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      AI_FALLBACK_ON_ERROR: "true"
+    volumes:
+      - .:/var/www/html
+      - /var/www/html/vendor
+      - /var/www/html/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - recruitsmart_dev_net
+    ports:
+      - "8000:10000"
+
+  db:
+    image: mysql:8.0
+    container_name: recruitsmart_db_dev
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-recruitsmart_dev}
+      MYSQL_USER: ${DB_USERNAME:-recruit}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_ROOT_PASSWORD: secret_root
+    volumes:
+      - dev_db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - recruitsmart_dev_net
+    ports:
+      - "3307:3306"
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: recruitsmart_mail
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - recruitsmart_dev_net
+
+volumes:
+  dev_db_data:
+
+networks:
+  recruitsmart_dev_net:
+    driver: bridge

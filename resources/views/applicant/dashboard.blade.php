@@ -9,6 +9,15 @@
         <p class="mt-1 text-sm text-gray-500">Track your applications and explore new opportunities.</p>
     </div>
 
+    <!-- Vue Application Progress Tracker Widget -->
+    @if(isset($recentApplications) && count($recentApplications) > 0)
+    <div id="vue-app">
+        <applicant-progress-tracker
+            status="{{ $recentApplications->first()->status }}"
+        ></applicant-progress-tracker>
+    </div>
+    @endif
+
     <!-- KPI Cards -->
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">

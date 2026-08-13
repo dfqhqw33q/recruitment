@@ -104,11 +104,11 @@
                     @method('PUT')
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Progress (%)</label>
-                        <input type="number" name="progress" min="0" max="100" value="{{ $onboarding->progress }}" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <input type="number" id="progressInput" name="progress" min="0" max="100" value="{{ $onboarding->progress }}" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Status</label>
-                        <select name="status" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        <select id="statusSelect" name="status" class="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                             <option value="pending" @selected($onboarding->status == 'pending')>Pending</option>
                             <option value="in_progress" @selected($onboarding->status == 'in_progress')>In Progress</option>
                             <option value="completed" @selected($onboarding->status == 'completed')>Completed</option>
@@ -144,4 +144,30 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const progressInput = document.getElementById('progressInput');
+        const statusSelect = document.getElementById('statusSelect');
+
+        if (progressInput && statusSelect) {
+            progressInput.addEventListener('input', function () {
+                const val = parseInt(this.value, 10);
+                if (val >= 100) {
+                    statusSelect.value = 'completed';
+                } else if (val < 100 && statusSelect.value === 'completed') {
+                    statusSelect.value = 'in_progress';
+                }
+            });
+
+            statusSelect.addEventListener('change', function () {
+                if (this.value === 'completed') {
+                    progressInput.value = 100;
+                } else if (this.value !== 'completed' && parseInt(progressInput.value, 10) >= 100) {
+                    progressInput.value = 50;
+                }
+            });
+        }
+    });
+</script>
 @endsection

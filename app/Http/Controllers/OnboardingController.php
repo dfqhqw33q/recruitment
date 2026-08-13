@@ -78,20 +78,44 @@ class OnboardingController extends Controller
             'status' => 'required|in:pending,in_progress,completed,on_hold',
         ]);
 
-        if ($data['status'] === 'completed') {
-            $data['completed_at'] = now();
+        $progressInput = (int) $data['progress'];
+        $statusInput = $data['status'];
+
+        if ($progressInput >= 100) {
             $data['progress'] = 100;
+            $data['status'] = 'completed';
+            $data['completed_at'] = $onboarding->completed_at ?? now();
+        } else {
+            $data['progress'] = $progressInput;
+            // If progress is less than 100%, status cannot remain completed
+            if ($statusInput === 'completed') {
+                $data['status'] = 'in_progress';
+            } else {
+                $data['status'] = $statusInput;
+            }
+            $data['completed_at'] = null;
+        }
+
+        // Preserve existing dates if not present in request
+        if (!$request->has('orientation_date') && $onboarding->orientation_date) {
+            unset($data['orientation_date']);
+        }
+        if (!$request->has('training_start') && $onboarding->training_start) {
+            unset($data['training_start']);
+        }
+        if (!$request->has('training_end') && $onboarding->training_end) {
+            unset($data['training_end']);
         }
 
         $onboarding->update($data);
 
         app(ActivityLogService::class)->log(
             'update', 'Onboarding',
-            "Onboarding #{$onboarding->id} updated (progress: {$onboarding->progress}%).",
+            "Onboarding #{$onboarding->id} updated (progress: {$onboarding->progress}%, status: {$onboarding->status}).",
             'Onboarding', $onboarding->id
         );
 
-        return back()->with('success', 'Onboarding details and progress updated.');
+        return back()->with('success', 'Onboarding progress updated to ' . $onboarding->progress . '% (' . str_replace('_', ' ', ucfirst($onboarding->status)) . ').');
     }
 
     public function updateChecklist(Request $request, Onboarding $onboarding)
@@ -102,9 +126,14 @@ class OnboardingController extends Controller
         // Auto-recalculate progress dynamically across the 5 20% milestones
         $onboarding->progress = $onboarding->calculateProgress();
         
-        if ($onboarding->progress >= 100 && $onboarding->status !== 'completed') {
+        if ($onboarding->progress >= 100) {
             $onboarding->status = 'completed';
-            $onboarding->completed_at = now();
+            $onboarding->completed_at = $onboarding->completed_at ?? now();
+        } else {
+            if ($onboarding->status === 'completed') {
+                $onboarding->status = 'in_progress';
+            }
+            $onboarding->completed_at = null;
         }
 
         $onboarding->save();

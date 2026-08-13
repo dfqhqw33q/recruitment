@@ -25,6 +25,17 @@
         </div>
     </div>
 
+    <!-- Vue Reactive Pipeline Kanban Widget -->
+    <div id="vue-app">
+        <pipeline-kanban-widget
+            :applied-count="{{ $totalApplicants }}"
+            :screening-count="{{ $applicationsByStatus['screening'] ?? 0 }}"
+            :interview-count="{{ $candidatesInterviewed }}"
+            :offer-count="{{ $applicationsByStatus['offered'] ?? 0 }}"
+            :hired-count="{{ $applicantsHired }}"
+        ></pipeline-kanban-widget>
+    </div>
+
     <!-- KPI Cards -->
     <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">

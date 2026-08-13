@@ -98,4 +98,34 @@ class OfferAndOnboardingTest extends TestCase
             'applicant_id' => $hiredApplication->applicant->id,
         ]);
     }
+
+    public function test_hr_can_manually_update_onboarding_progress_without_forcing_100_percent()
+    {
+        $hrUser = User::where('email', 'hr@recruit.test')->first();
+        $hiredApplication = Application::first();
+        $hiredApplication->update(['status' => 'hired']);
+
+        $onboarding = Onboarding::create([
+            'application_id' => $hiredApplication->id,
+            'assigned_to' => $hrUser->id,
+            'start_date' => now()->format('Y-m-d'),
+            'orientation_date' => now()->format('Y-m-d'),
+            'status' => 'in_progress',
+            'progress' => 20,
+        ]);
+
+        // Manually update progress to 50% with status in_progress
+        $response = $this->actingAs($hrUser)->put(route('recruitment.onboarding.update', $onboarding), [
+            'start_date' => now()->format('Y-m-d'),
+            'orientation_date' => now()->format('Y-m-d'),
+            'progress' => 50,
+            'status' => 'in_progress',
+        ]);
+
+        $response->assertRedirect();
+
+        $onboarding->refresh();
+        $this->assertEquals(50, $onboarding->progress);
+        $this->assertEquals('in_progress', $onboarding->status);
+    }
 }

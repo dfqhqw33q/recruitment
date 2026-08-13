@@ -27,3 +27,9 @@ Thumbs.db
 
 .env.mysql.backup
 .env
+
+composer.phar
+composer-setup.php
+.env
+.env.*
+!.env.example
