@@ -136,10 +136,20 @@
                             @endif
                         </td>
                         <td class="px-4 py-4 text-right whitespace-nowrap">
-                            <a href="{{ route('recruitment.applications.show', $application) }}"
-                               class="text-indigo-600 hover:text-indigo-900 font-semibold text-sm">
-                                Review <i class="fa-solid fa-chevron-right text-xs"></i>
-                            </a>
+                            <div class="flex items-center justify-end gap-2">
+                                @if($application->has_resume)
+                                <button type="button"
+                                        onclick="openAppResumeModal('{{ route('recruitment.applications.resume.preview', $application) }}', '{{ addslashes($application->applicant->full_name) }}', '{{ route('recruitment.applications.resume.download', $application) }}', '{{ $application->reference_code }}', '{{ $application->resume_extension }}')"
+                                        class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition-colors"
+                                        title="Instant Resume Preview">
+                                    <i class="fa-solid fa-file-pdf text-red-500"></i> Resume
+                                </button>
+                                @endif
+                                <a href="{{ route('recruitment.applications.show', $application) }}"
+                                   class="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">
+                                    Review <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     @empty
@@ -174,8 +184,109 @@
     </div>
 </div>
 
+<!-- Quick Resume Preview Modal -->
+<div id="quickResumeModal" class="hidden fixed inset-0 z-50 overflow-hidden bg-gray-900/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full h-[95vh] max-w-5xl flex flex-col overflow-hidden border border-gray-200">
+        <!-- Modal Top Bar -->
+        <div class="px-6 py-3.5 bg-gray-900 text-white flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-sm">
+                    <i class="fa-solid fa-file-pdf"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <span id="quickResumeApplicantName">Applicant Resume</span>
+                        <span class="text-[10px] font-normal px-2 py-0.5 rounded bg-gray-800 text-gray-300 font-mono" id="quickResumeRefCode">APP-REF</span>
+                    </h3>
+                    <p class="text-xs text-gray-400 mt-0.5">Instant In-Browser Document Preview</p>
+                </div>
+            </div>
+
+            <!-- Modal Action Buttons -->
+            <div class="flex items-center gap-2">
+                <a id="quickResumeDownloadBtn" href="#"
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-md shadow-sm transition-colors">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Download</span>
+                </a>
+                <a id="quickResumeNewTabBtn" href="#" target="_blank"
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-300 bg-gray-800 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    <span>New Tab</span>
+                </a>
+                <button type="button"
+                        onclick="closeAppResumeModal()"
+                        class="w-8 h-8 rounded-md bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700 flex items-center justify-center transition-colors"
+                        title="Close Modal (Esc)">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal Viewer Body -->
+        <div class="flex-1 bg-gray-100 relative overflow-hidden" id="quickResumeBody">
+            <iframe id="quickResumeIframe" src="" style="width:100%; height:100%; min-height:75vh; border:none; display:block;" title="Resume Viewer"></iframe>
+            <div id="quickResumeImageContainer" class="hidden w-full h-full flex items-center justify-center p-4 overflow-auto">
+                <img id="quickResumeImg" src="" alt="Resume" class="max-w-full max-h-full object-contain rounded shadow">
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
+function openAppResumeModal(previewUrl, applicantName, downloadUrl, refCode, ext) {
+    const modal = document.getElementById('quickResumeModal');
+    const nameEl = document.getElementById('quickResumeApplicantName');
+    const refEl = document.getElementById('quickResumeRefCode');
+    const downloadBtn = document.getElementById('quickResumeDownloadBtn');
+    const newTabBtn = document.getElementById('quickResumeNewTabBtn');
+    const iframe = document.getElementById('quickResumeIframe');
+    const imgContainer = document.getElementById('quickResumeImageContainer');
+    const img = document.getElementById('quickResumeImg');
+
+    nameEl.textContent = applicantName + ' — Resume';
+    refEl.textContent = refCode;
+    downloadBtn.href = downloadUrl;
+    newTabBtn.href = previewUrl;
+
+    const imgTypes = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    if (imgTypes.includes(ext.toLowerCase())) {
+        iframe.classList.add('hidden');
+        iframe.src = '';
+        imgContainer.classList.remove('hidden');
+        img.src = previewUrl;
+    } else {
+        imgContainer.classList.add('hidden');
+        img.src = '';
+        iframe.classList.remove('hidden');
+        iframe.src = previewUrl + '#toolbar=1&navpanes=0&view=FitH';
+    }
+
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeAppResumeModal() {
+    const modal = document.getElementById('quickResumeModal');
+    const iframe = document.getElementById('quickResumeIframe');
+    const img = document.getElementById('quickResumeImg');
+
+    if (iframe) iframe.src = '';
+    if (img) img.src = '';
+
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeAppResumeModal();
+    }
+});
+
 function getChecked() {
     return [...document.querySelectorAll('.row-check:checked')];
 }

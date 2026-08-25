@@ -75,6 +75,22 @@ class DocumentController extends Controller
         return back()->with('success', 'Document status updated.');
     }
 
+    public function preview(UploadedDocument $document)
+    {
+        if (!Storage::disk('public')->exists($document->file_path)) {
+            abort(404, 'Document file not found on server.');
+        }
+
+        $fullPath = storage_path('app/public/' . $document->file_path);
+        $mime = Storage::disk('public')->mimeType($document->file_path) ?: 'application/pdf';
+
+        return response()->file($fullPath, [
+            'Content-Type' => $mime,
+            'Content-Disposition' => 'inline; filename="' . $document->document_name . '"',
+            'Cache-Control' => 'no-cache, must-revalidate',
+        ]);
+    }
+
     public function download(UploadedDocument $document)
     {
         if (!Storage::disk('public')->exists($document->file_path)) {

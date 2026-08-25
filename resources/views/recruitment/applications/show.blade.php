@@ -63,6 +63,120 @@
             </div>
             @endif
 
+            <!-- 1. APPLICANT SUBMITTED RESUME PREVIEW (INLINE VIEWER) -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden" id="resumePreviewCard">
+                <!-- Header & Controls -->
+                <div class="p-4 bg-gray-50 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm">
+                            <i class="fa-solid fa-file-pdf"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-base font-bold text-gray-900">Applicant Resume Preview</h3>
+                                @if($application->has_resume)
+                                <span class="inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full {{ $application->resume_is_custom ? 'bg-indigo-100 text-indigo-800 border border-indigo-200' : 'bg-blue-100 text-blue-800 border border-blue-200' }}">
+                                    {{ $application->resume_type_label }}
+                                </span>
+                                @endif
+                            </div>
+                            @if($application->has_resume)
+                            <p class="text-xs text-gray-500 mt-0.5 font-mono">
+                                {{ strtoupper($application->resume_extension) }}
+                                @if($application->resume_file_size) &bull; {{ $application->resume_file_size }} @endif
+                                &bull; <span class="text-gray-400">Instant in-browser preview</span>
+                            </p>
+                            @else
+                            <p class="text-xs text-amber-600 mt-0.5 font-medium">No file attached &bull; Profile data available below</p>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex items-center gap-2 flex-wrap">
+                        @if($application->has_resume)
+                            <!-- Download Button (Always accessible) -->
+                            <a href="{{ route('recruitment.applications.resume.download', $application) }}"
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 hover:text-indigo-600 transition-colors"
+                               title="Download file to your device">
+                                <i class="fa-solid fa-download text-indigo-600"></i>
+                                <span>Download</span>
+                            </a>
+
+                            <!-- Popout / Open in New Tab -->
+                            <a href="{{ route('recruitment.applications.resume.preview', $application) }}"
+                               target="_blank"
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 hover:text-indigo-600 transition-colors"
+                               title="Open preview in new tab">
+                                <i class="fa-solid fa-arrow-up-right-from-square text-gray-500"></i>
+                                <span>New Tab</span>
+                            </a>
+
+                            <!-- Fullscreen Preview Modal Trigger -->
+                            <button type="button"
+                                    onclick="openFullscreenResumeModal()"
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-md shadow-sm hover:bg-indigo-100 transition-colors"
+                                    title="View fullscreen">
+                                <i class="fa-solid fa-expand"></i>
+                                <span>Fullscreen</span>
+                            </button>
+                        @endif
+
+                        <!-- Collapse/Expand Preview Button -->
+                        <button type="button"
+                                onclick="toggleResumeViewer()"
+                                id="resumeToggleBtn"
+                                class="inline-flex items-center justify-center w-8 h-8 text-gray-500 hover:text-gray-800 hover:bg-gray-200/60 rounded-md transition-colors"
+                                title="Toggle Preview Container">
+                            <i class="fa-solid fa-chevron-up text-xs transition-transform duration-200" id="resumeToggleIcon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Preview Frame Content Area -->
+                <div id="resumeViewerContent" class="transition-all duration-300 ease-in-out">
+                    @if($application->has_resume)
+                        @if($application->resume_extension === 'pdf')
+                        <div class="relative bg-gray-100 border-t border-gray-200" style="width:100%; height:850px;">
+                            <iframe src="{{ route('recruitment.applications.resume.preview', $application) }}#toolbar=1&navpanes=0&view=FitH"
+                                    style="width:100%; height:850px; border:none; display:block; background-color:#f8fafc;"
+                                    title="Applicant Resume Preview">
+                            </iframe>
+                        </div>
+                        @elseif(in_array($application->resume_extension, ['png', 'jpg', 'jpeg']))
+                        <div class="p-4 bg-gray-50 border-t border-gray-200 flex justify-center items-center overflow-auto" style="min-height:500px; max-height:850px;">
+                            <img src="{{ route('recruitment.applications.resume.preview', $application) }}"
+                                 alt="Applicant Resume"
+                                 style="max-width:100%; height:auto; display:block;"
+                                 class="rounded shadow-sm border border-gray-200">
+                        </div>
+                        @else
+                        <!-- Word / Other document format fallback -->
+                        <div class="p-6 bg-amber-50 border-t border-amber-200 text-center">
+                            <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto mb-3 text-xl font-bold">
+                                <i class="fa-solid fa-file-word"></i>
+                            </div>
+                            <h4 class="text-sm font-bold text-gray-900">Word Document ({{ strtoupper($application->resume_extension) }})</h4>
+                            <p class="text-xs text-gray-600 mt-1 max-w-md mx-auto">This document is formatted as a {{ strtoupper($application->resume_extension) }} file. You can download it directly or review the candidate's parsed qualifications below.</p>
+                            <div class="mt-4 flex items-center justify-center gap-3">
+                                <a href="{{ route('recruitment.applications.resume.download', $application) }}"
+                                   class="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-indigo-600 rounded-md hover:bg-indigo-500 shadow-sm">
+                                    <i class="fa-solid fa-download"></i> Download {{ strtoupper($application->resume_extension) }} File
+                                </a>
+                            </div>
+                        </div>
+                        @endif
+                    @else
+                    <div class="p-8 text-center bg-gray-50 border-t border-gray-200">
+                        <i class="fa-solid fa-file-circle-xmark text-gray-300 text-4xl mb-2"></i>
+                        <p class="text-sm font-semibold text-gray-700">No Resume File Attached</p>
+                        <p class="text-xs text-gray-500 mt-1">This candidate submitted an application without an attached resume file.</p>
+                        <p class="text-xs text-indigo-600 font-medium mt-2">You can review their profile details, education, experience, and skills below.</p>
+                    </div>
+                    @endif
+                </div>
+            </div>
+
             <!-- Screening Q&A Responses -->
             @if(!empty($application->screening_answers) && is_array($application->screening_answers))
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -265,17 +379,43 @@
                     <div class="flex justify-between"><dt class="text-gray-500">Applied</dt><dd class="font-medium">{{ \Carbon\Carbon::parse($application->applied_at)->format('M d, Y') }}</dd></div>
                     <div class="flex justify-between"><dt class="text-gray-500">Position</dt><dd class="font-medium">{{ $application->jobPosting->title }}</dd></div>
                 </dl>
-                @if($application->custom_resume_path)
-                <div class="mt-4 p-3 bg-indigo-50 rounded-md border border-indigo-100 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-file-pdf text-red-500 text-lg"></i>
-                        <span class="text-xs font-semibold text-indigo-900">Custom Position CV</span>
+
+                <!-- Sidebar Resume Quick Box -->
+                <div class="mt-5 pt-4 border-t border-gray-100">
+                    <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Resume & CV</h4>
+                    @if($application->has_resume)
+                    <div class="p-3 bg-indigo-50/70 rounded-lg border border-indigo-100 space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-indigo-900 flex items-center gap-1.5">
+                                <i class="fa-solid fa-file-pdf text-red-500"></i>
+                                {{ $application->resume_type_label }}
+                            </span>
+                            <span class="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-indigo-200/70 text-indigo-800 uppercase">
+                                {{ $application->resume_extension }}
+                            </span>
+                        </div>
+                        <p class="text-[11px] text-gray-600 truncate" title="{{ $application->resume_file_name }}">
+                            {{ $application->resume_file_name }}
+                        </p>
+                        <div class="grid grid-cols-2 gap-2 pt-1">
+                            <button type="button"
+                                    onclick="openFullscreenResumeModal()"
+                                    class="w-full inline-flex items-center justify-center gap-1 py-1.5 text-xs font-semibold text-white bg-indigo-600 rounded hover:bg-indigo-500 shadow-sm transition-colors">
+                                <i class="fa-solid fa-eye"></i> Preview
+                            </button>
+                            <a href="{{ route('recruitment.applications.resume.download', $application) }}"
+                               class="w-full inline-flex items-center justify-center gap-1 py-1.5 text-xs font-semibold text-indigo-700 bg-white border border-indigo-200 rounded hover:bg-indigo-50 transition-colors">
+                                <i class="fa-solid fa-download"></i> Download
+                            </a>
+                        </div>
                     </div>
-                    <a href="{{ Storage::url($application->custom_resume_path) }}" target="_blank" class="text-xs font-bold text-indigo-600 hover:text-indigo-800">
-                        Open File <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-1"></i>
-                    </a>
+                    @else
+                    <div class="p-3 bg-gray-50 rounded-lg border border-gray-200 text-center">
+                        <p class="text-xs text-gray-500 italic">No resume file uploaded.</p>
+                    </div>
+                    @endif
                 </div>
-                @endif
+
                 @if($application->custom_notes)
                 <div class="mt-4">
                     <h4 class="text-sm font-semibold text-gray-700 mb-1">Additional Candidate Notes</h4>
@@ -333,4 +473,116 @@
         </div>
     </div>
 </div>
+
+@if($application->has_resume)
+<!-- FULLSCREEN RESUME PREVIEW MODAL -->
+<div id="fullscreenResumeModal" class="hidden fixed inset-0 z-50 overflow-hidden bg-gray-900/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full h-[95vh] max-w-6xl flex flex-col overflow-hidden border border-gray-200">
+        <!-- Modal Top Bar -->
+        <div class="px-6 py-3.5 bg-gray-900 text-white flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-sm">
+                    <i class="fa-solid fa-file-pdf"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                        <span>{{ $application->applicant->full_name }} &mdash; Resume</span>
+                        <span class="text-[10px] font-normal px-2 py-0.5 rounded bg-gray-800 text-gray-300 font-mono">{{ $application->reference_code }}</span>
+                    </h3>
+                    <p class="text-xs text-gray-400 mt-0.5">{{ $application->resume_type_label }} &bull; {{ $application->resume_file_name }}</p>
+                </div>
+            </div>
+
+            <!-- Modal Action Buttons -->
+            <div class="flex items-center gap-2">
+                <a href="{{ route('recruitment.applications.resume.download', $application) }}"
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-md shadow-sm transition-colors">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Download</span>
+                </a>
+                <a href="{{ route('recruitment.applications.resume.preview', $application) }}"
+                   target="_blank"
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-300 bg-gray-800 hover:bg-gray-700 rounded-md transition-colors">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    <span>New Tab</span>
+                </a>
+                <button type="button"
+                        onclick="closeFullscreenResumeModal()"
+                        class="w-8 h-8 rounded-md bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700 flex items-center justify-center transition-colors"
+                        title="Close Modal (Esc)">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal Iframe Body -->
+        <div class="flex-1 bg-gray-100 relative overflow-hidden">
+            @if($application->resume_extension === 'pdf')
+            <iframe src="{{ route('recruitment.applications.resume.preview', $application) }}#toolbar=1&navpanes=0&view=FitH"
+                    style="width:100%; height:100%; min-height:80vh; border:none; display:block;"
+                    title="Fullscreen Resume Viewer">
+            </iframe>
+            @elseif(in_array($application->resume_extension, ['png', 'jpg', 'jpeg']))
+            <div class="w-full h-full flex items-center justify-center p-4 overflow-auto">
+                <img src="{{ route('recruitment.applications.resume.preview', $application) }}"
+                     alt="Applicant Resume"
+                     class="max-w-full max-h-full object-contain rounded shadow">
+            </div>
+            @else
+            <div class="w-full h-full flex items-center justify-center p-6 text-center">
+                <div class="bg-white p-8 rounded-xl shadow-lg max-w-md">
+                    <i class="fa-solid fa-file-word text-blue-600 text-5xl mb-4"></i>
+                    <h4 class="text-base font-bold text-gray-900">Word Document Preview</h4>
+                    <p class="text-xs text-gray-600 mt-2">Word files (.docx) are downloaded to be opened in your word processor.</p>
+                    <a href="{{ route('recruitment.applications.resume.download', $application) }}"
+                       class="mt-4 inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-indigo-600 rounded-md hover:bg-indigo-500">
+                        <i class="fa-solid fa-download"></i> Download {{ $application->resume_file_name }}
+                    </a>
+                </div>
+            </div>
+            @endif
+        </div>
+    </div>
+</div>
+@endif
+
+@push('scripts')
+<script>
+function toggleResumeViewer() {
+    const content = document.getElementById('resumeViewerContent');
+    const icon = document.getElementById('resumeToggleIcon');
+    if (!content || !icon) return;
+
+    if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        icon.classList.remove('rotate-180');
+    } else {
+        content.classList.add('hidden');
+        icon.classList.add('rotate-180');
+    }
+}
+
+function openFullscreenResumeModal() {
+    const modal = document.getElementById('fullscreenResumeModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeFullscreenResumeModal() {
+    const modal = document.getElementById('fullscreenResumeModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeFullscreenResumeModal();
+    }
+});
+</script>
+@endpush
 @endsection

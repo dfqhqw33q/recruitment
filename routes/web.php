@@ -60,15 +60,19 @@ Route::middleware(['auth', 'role:Applicant'])->prefix('applicant')->name('applic
     Route::get('/dashboard', [ApplicantDashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [ApplicantPortalController::class, 'profile'])->name('profile');
     Route::put('/profile', [ApplicantPortalController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/resume/parse-autofill', [ApplicantPortalController::class, 'parseAndAutoFillResume'])->name('resume.parse-autofill');
+    Route::get('/resume/preview', [ApplicantPortalController::class, 'previewResume'])->name('resume.preview');
     Route::get('/jobs', [ApplicantPortalController::class, 'jobs'])->name('jobs');
     Route::get('/jobs/{posting}', [ApplicantPortalController::class, 'showJob'])->name('jobs.show');
     Route::post('/jobs/{posting}/apply', [ApplicantPortalController::class, 'apply'])->name('apply');
     Route::get('/applications', [ApplicantPortalController::class, 'track'])->name('applications');
     Route::get('/track', [ApplicantPortalController::class, 'track'])->name('track');
+    Route::get('/applications/{application}/resume/preview', [ApplicantPortalController::class, 'previewApplicationResume'])->name('applications.resume.preview');
     Route::post('/applications/{application}/withdraw', [ApplicantPortalController::class, 'withdrawApplication'])->name('applications.withdraw');
     Route::post('/offers/{offer}/accept', [ApplicantPortalController::class, 'acceptOffer'])->name('offers.accept');
     Route::post('/offers/{offer}/reject', [ApplicantPortalController::class, 'rejectOffer'])->name('offers.reject');
     Route::post('/documents', [ApplicantPortalController::class, 'uploadDocument'])->name('documents.store');
+    Route::get('/documents/{document}/preview', [ApplicantPortalController::class, 'previewDocument'])->name('documents.preview');
 
     // Education, Experience, Skills, Certifications management
     Route::post('/education', [ApplicantPortalController::class, 'storeEducation'])->name('education.store');
@@ -104,7 +108,7 @@ Route::middleware(['auth', 'role:Super Admin,HR Administrator,Recruitment Office
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Recruitment management
-Route::resource('recruitment/job-postings', JobPostingController::class)
+    Route::resource('recruitment/job-postings', JobPostingController::class)
         ->parameters(['job-postings' => 'posting'])
         ->names([
             'index' => 'recruitment.job-postings.index',
@@ -119,6 +123,8 @@ Route::resource('recruitment/job-postings', JobPostingController::class)
 
     Route::get('recruitment/applications', [ApplicationController::class, 'index'])->name('recruitment.applications.index');
     Route::get('recruitment/applications/{application}', [ApplicationController::class, 'show'])->name('recruitment.applications.show');
+    Route::get('recruitment/applications/{application}/resume/preview', [ApplicationController::class, 'previewResume'])->name('recruitment.applications.resume.preview');
+    Route::get('recruitment/applications/{application}/resume/download', [ApplicationController::class, 'downloadResume'])->name('recruitment.applications.resume.download');
     Route::patch('recruitment/applications/{application}/status', [ApplicationController::class, 'updateStatus'])->name('recruitment.applications.status');
     Route::post('recruitment/applications/{application}/shortlist', [ApplicationController::class, 'shortlist'])->name('recruitment.applications.shortlist');
     Route::post('recruitment/applications/{application}/reject', [ApplicationController::class, 'reject'])->name('recruitment.applications.reject');
@@ -143,7 +149,7 @@ Route::resource('recruitment/job-postings', JobPostingController::class)
     // AI Recommendations
     Route::get('recruitment/ai', [AiRecommendationController::class, 'index'])->name('recruitment.ai.index');
     Route::get('recruitment/ai/{recommendation}', [AiRecommendationController::class, 'show'])->name('recruitment.ai.show');
-Route::post('recruitment/ai/generate/{application}', [AiRecommendationController::class, 'generate'])->name('recruitment.ai.generate');
+    Route::post('recruitment/ai/generate/{application}', [AiRecommendationController::class, 'generate'])->name('recruitment.ai.generate');
     Route::post('recruitment/ai/generate-posting/{posting}', [AiRecommendationController::class, 'generateForPosting'])->name('recruitment.ai.generate-posting');
     Route::post('recruitment/ai/generate-all', [AiRecommendationController::class, 'generateAll'])->name('recruitment.ai.generate-all');
 
@@ -171,6 +177,7 @@ Route::post('recruitment/ai/generate/{application}', [AiRecommendationController
     Route::get('recruitment/documents', [DocumentController::class, 'index'])->name('recruitment.documents.index');
     Route::post('recruitment/documents', [DocumentController::class, 'store'])->name('recruitment.documents.store');
     Route::match(['post', 'patch'], 'recruitment/documents/{document}/verify', [DocumentController::class, 'verify'])->name('recruitment.documents.verify');
+    Route::get('recruitment/documents/{document}/preview', [DocumentController::class, 'preview'])->name('recruitment.documents.preview');
     Route::get('recruitment/documents/{document}/download', [DocumentController::class, 'download'])->name('recruitment.documents.download');
     Route::delete('recruitment/documents/{document}', [DocumentController::class, 'destroy'])->name('recruitment.documents.destroy');
 

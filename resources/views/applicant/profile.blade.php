@@ -33,6 +33,66 @@
     </div>
     @endif
 
+    <!-- AI Resume Smart Auto-Fill Card -->
+    <div class="bg-white rounded-lg shadow-sm border border-indigo-200/80 p-6 relative overflow-hidden">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+            <!-- Left Header -->
+            <div class="flex items-start gap-3.5 max-w-xl">
+                <div class="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 text-base">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h3 class="text-base font-bold text-gray-900">Fast-Track Your Profile Setup</h3>
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                            <i class="fa-solid fa-bolt text-amber-500 text-[10px]"></i> 1-Click AI Auto-Fill
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1 leading-relaxed">
+                        Upload your CV / Resume (<span class="font-medium text-gray-700">PDF, DOCX, or DOC</span>). Our AI parser will automatically extract your contact info, work experiences, education history, and skills directly into your profile form!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Right Upload Form -->
+            <form id="aiAutofillForm" method="POST" action="{{ route('applicant.resume.parse-autofill') }}" enctype="multipart/form-data" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 bg-gray-50 border border-gray-200 rounded-lg p-2.5 shrink-0">
+                @csrf
+                <div class="relative flex-1 min-w-[240px]">
+                    <input type="file"
+                           name="resume_file"
+                           id="aiResumeInput"
+                           accept=".pdf,.docx,.doc,.txt"
+                           required
+                           class="block w-full text-xs text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer">
+                </div>
+                <button type="submit"
+                        id="aiAutofillBtn"
+                        class="inline-flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-md shadow-sm transition-colors whitespace-nowrap cursor-pointer">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>Auto-Fill with AI</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- AI Loading Overlay (Hidden by default) -->
+    <div id="aiLoadingOverlay" class="hidden fixed inset-0 z-50 bg-gray-900/75 backdrop-blur-sm flex flex-col items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center space-y-4 border border-gray-100">
+            <div class="w-16 h-16 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto text-2xl relative">
+                <i class="fa-solid fa-wand-magic-sparkles animate-pulse"></i>
+                <div class="absolute inset-0 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+            <div>
+                <h3 class="text-base font-bold text-gray-900">AI Parsing in Progress</h3>
+                <p class="text-xs text-gray-500 mt-1">Reading resume, extracting work history, education degrees, and skills...</p>
+            </div>
+            <div class="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                <div class="bg-indigo-600 h-1.5 rounded-full animate-pulse" style="width: 75%"></div>
+            </div>
+            <p class="text-[11px] text-gray-400">This usually takes about 2 to 5 seconds</p>
+        </div>
+    </div>
+
     <!-- 1. Personal Information Form -->
     <form method="POST" action="{{ route('applicant.profile.update') }}" enctype="multipart/form-data" class="space-y-6">
         @csrf
@@ -110,9 +170,15 @@
                     <label class="block text-sm font-medium text-gray-700">Master Resume / CV (PDF, DOC, DOCX — max 5MB)</label>
                     <input type="file" name="resume" accept=".pdf,.doc,.docx" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:rounded-md file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100">
                     @if($applicant->resume_path)
-                    <div class="mt-2 flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded border border-emerald-200 w-fit">
-                        <i class="fa-solid fa-file-circle-check text-emerald-600"></i>
-                        <span>Current Master Resume is uploaded and active.</span>
+                    <div class="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                        <div class="flex items-center gap-2 text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded border border-emerald-200">
+                            <i class="fa-solid fa-file-circle-check text-emerald-600"></i>
+                            <span>Current Master Resume is uploaded and active.</span>
+                        </div>
+                        <a href="{{ route('applicant.resume.preview') }}" target="_blank"
+                           class="inline-flex items-center gap-1 px-3 py-1.5 font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded hover:bg-indigo-100 transition-colors">
+                            <i class="fa-solid fa-eye"></i> Preview Current Resume
+                        </a>
                     </div>
                     @endif
                 </div>
@@ -497,5 +563,69 @@
         </form>
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const autofillForm = document.getElementById('aiAutofillForm');
+    const resumeInput = document.getElementById('aiResumeInput');
+    const overlay = document.getElementById('aiLoadingOverlay');
+
+    if (autofillForm && overlay) {
+        autofillForm.addEventListener('submit', function(e) {
+            if (!resumeInput.files || resumeInput.files.length === 0) {
+                alert('Please select a resume file (PDF or DOCX) first.');
+                e.preventDefault();
+                return;
+            }
+
+            e.preventDefault();
+            overlay.classList.remove('hidden');
+
+            const formData = new FormData(autofillForm);
+
+            fetch(autofillForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(async response => {
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Failed to parse resume.');
+                }
+                return data;
+            })
+            .then(data => {
+                // Show success state in overlay before reload
+                overlay.innerHTML = `
+                    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center space-y-4 border border-emerald-100">
+                        <div class="w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto text-3xl">
+                            <i class="fa-solid fa-circle-check animate-bounce"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-gray-900">Auto-Fill Complete!</h3>
+                            <p class="text-xs text-gray-600 mt-1.5">${data.message}</p>
+                        </div>
+                        <p class="text-[11px] text-gray-400">Refreshing your profile form...</p>
+                    </div>
+                `;
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1200);
+            })
+            .catch(error => {
+                overlay.classList.add('hidden');
+                alert(error.message || 'An error occurred while parsing your resume. Please try again or fill in manually.');
+            });
+        });
+    }
+});
+</script>
+@endpush
 
 @endsection

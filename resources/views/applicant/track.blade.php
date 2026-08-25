@@ -141,14 +141,14 @@
                 </div>
                 @endif
 
-                @if($application->custom_resume_path)
+                @if($application->has_resume)
                 <div class="bg-gray-50 border border-gray-200 rounded-md p-3 flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-file-pdf text-red-500"></i>
-                        <span class="text-xs font-medium text-gray-700">Custom Position CV Attached</span>
+                        <span class="text-xs font-medium text-gray-700">{{ $application->resume_type_label }}</span>
                     </div>
-                    <a href="{{ Storage::url($application->custom_resume_path) }}" target="_blank" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">
-                        View <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i>
+                    <a href="{{ route('applicant.applications.resume.preview', $application) }}" target="_blank" class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-800">
+                        <i class="fa-solid fa-eye text-[11px]"></i> Preview <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
                     </a>
                 </div>
                 @endif

@@ -68,6 +68,69 @@ class ApplicantPortalController extends Controller
         return back()->with('success', 'Profile updated successfully.');
     }
 
+    public function parseAndAutoFillResume(Request $request)
+    {
+        $request->validate([
+            'resume_file' => 'required|file|mimes:pdf,docx,doc,txt|max:5120',
+        ]);
+
+        $applicant = $this->getOrCreateApplicant();
+        $file = $request->file('resume_file');
+
+        // Parse file with ResumeParserService
+        $parser = app(\App\Services\ResumeParserService::class);
+        $result = $parser->parse($file);
+
+        if (!$result['success']) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $result['message']], 422);
+            }
+            return back()->with('error', $result['message']);
+        }
+
+        // Save resume file to storage as active Master Resume
+        if ($applicant->resume_path) {
+            Storage::disk('public')->delete($applicant->resume_path);
+        }
+        $savedPath = $file->store('resumes/' . $applicant->id, 'public');
+
+        // Apply parsed data to database
+        $stats = $parser->applyToProfile($applicant, $result['data'], $savedPath);
+
+        $summaryParts = [];
+        if (!empty($result['data']['personal']['first_name']) || !empty($result['data']['personal']['last_name'])) {
+            $summaryParts[] = 'Personal info';
+        }
+        if ($stats['skills_added'] > 0) {
+            $summaryParts[] = "{$stats['skills_added']} skill(s)";
+        }
+        if ($stats['experiences_added'] > 0) {
+            $summaryParts[] = "{$stats['experiences_added']} work experience(s)";
+        }
+        if ($stats['education_added'] > 0) {
+            $summaryParts[] = "{$stats['education_added']} education record(s)";
+        }
+        if ($stats['certifications_added'] > 0) {
+            $summaryParts[] = "{$stats['certifications_added']} certification(s)";
+        }
+
+        $summaryMsg = !empty($summaryParts)
+            ? 'Extracted and auto-filled: ' . implode(', ', $summaryParts) . '.'
+            : 'Resume uploaded and parsed.';
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => "✨ AI Auto-Fill Complete! {$summaryMsg}",
+                'stats' => $stats,
+                'parsed_data' => $result['data'],
+                'parsed_with' => $result['parsed_with'],
+            ]);
+        }
+
+        return back()->with('success', "✨ AI Auto-Fill Complete! {$summaryMsg}");
+    }
+
     public function jobs(Request $request)
     {
         $query = JobPosting::with('department', 'jobPosition')
@@ -207,6 +270,63 @@ public function markNotificationRead(NotificationRecord $notification)
             ->update(['is_read' => true]);
 
         return back()->with('success', 'All notifications marked as read.');
+    }
+
+    public function previewResume()
+    {
+        $applicant = auth()->user()->applicant;
+        if (!$applicant || !$applicant->resume_path || !Storage::disk('public')->exists($applicant->resume_path)) {
+            abort(404, 'Master resume file not found.');
+        }
+
+        $fullPath = storage_path('app/public/' . $applicant->resume_path);
+        $mime = Storage::disk('public')->mimeType($applicant->resume_path) ?: 'application/pdf';
+        $filename = 'My_Resume_' . $applicant->full_name . '.' . pathinfo($applicant->resume_path, PATHINFO_EXTENSION);
+
+        return response()->file($fullPath, [
+            'Content-Type' => $mime,
+            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            'Cache-Control' => 'no-cache, must-revalidate',
+        ]);
+    }
+
+    public function previewApplicationResume(Application $application)
+    {
+        $this->authorizeApplicant($application);
+        $path = $application->resume_path;
+
+        if (!$path || !Storage::disk('public')->exists($path)) {
+            abort(404, 'Application resume not found.');
+        }
+
+        $fullPath = storage_path('app/public/' . $path);
+        $mime = Storage::disk('public')->mimeType($path) ?: 'application/pdf';
+        $filename = $application->resume_file_name;
+
+        return response()->file($fullPath, [
+            'Content-Type' => $mime,
+            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            'Cache-Control' => 'no-cache, must-revalidate',
+        ]);
+    }
+
+    public function previewDocument(UploadedDocument $document)
+    {
+        $applicant = auth()->user()->applicant;
+        abort_unless($applicant && $document->applicant_id === $applicant->id, 403);
+
+        if (!Storage::disk('public')->exists($document->file_path)) {
+            abort(404, 'Document file not found.');
+        }
+
+        $fullPath = storage_path('app/public/' . $document->file_path);
+        $mime = Storage::disk('public')->mimeType($document->file_path) ?: 'application/pdf';
+
+        return response()->file($fullPath, [
+            'Content-Type' => $mime,
+            'Content-Disposition' => 'inline; filename="' . $document->document_name . '"',
+            'Cache-Control' => 'no-cache, must-revalidate',
+        ]);
     }
 
     protected function authorizeApplicant(Application $application)

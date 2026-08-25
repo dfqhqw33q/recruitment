@@ -8,12 +8,14 @@ use App\Models\JobPosting;
 use App\Services\ActivityLogService;
 use App\Services\AiRecommendationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ApplicationController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Application::with('applicant', 'jobPosting', 'aiRecommendation')
+        $query = Application::with(['applicant.documents', 'jobPosting', 'aiRecommendation', 'documents'])
             ->when($request->search, function ($q, $s) {
                 $q->where(function ($sub) use ($s) {
                     $sub->where('reference_code', 'like', "%{$s}%")
@@ -47,6 +49,37 @@ class ApplicationController extends Controller
             'jobPosting', 'interviews.assessment', 'aiRecommendation', 'offerLetter', 'documents',
         ]);
         return view('recruitment.applications.show', compact('application'));
+    }
+
+    public function previewResume(Application $application)
+    {
+        $path = $application->resume_path;
+
+        if (!$path || !Storage::disk('public')->exists($path)) {
+            abort(404, 'Resume file not found on server.');
+        }
+
+        $fullPath = storage_path('app/public/' . $path);
+        $mime = Storage::disk('public')->mimeType($path) ?: 'application/pdf';
+        $filename = $application->resume_file_name;
+
+        return response()->file($fullPath, [
+            'Content-Type' => $mime,
+            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            'Cache-Control' => 'no-cache, must-revalidate',
+        ]);
+    }
+
+    public function downloadResume(Application $application)
+    {
+        $path = $application->resume_path;
+
+        if (!$path || !Storage::disk('public')->exists($path)) {
+            return back()->with('error', 'Resume file not found.');
+        }
+
+        $filename = $application->resume_file_name;
+        return Storage::disk('public')->download($path, $filename);
     }
 
     public function updateStatus(Request $request, Application $application)

@@ -140,4 +140,69 @@ class Application extends Model
             'screening' => $this->screening_date,
         ];
     }
+
+    public function getResumePathAttribute(): ?string
+    {
+        if ($this->custom_resume_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($this->custom_resume_path)) {
+            return $this->custom_resume_path;
+        }
+
+        if ($this->applicant?->resume_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($this->applicant->resume_path)) {
+            return $this->applicant->resume_path;
+        }
+
+        $docResume = $this->documents->where('document_type', 'resume')->first()
+            ?? $this->applicant?->documents->where('document_type', 'resume')->first();
+        if ($docResume && \Illuminate\Support\Facades\Storage::disk('public')->exists($docResume->file_path)) {
+            return $docResume->file_path;
+        }
+
+        return $this->custom_resume_path ?: $this->applicant?->resume_path;
+    }
+
+    public function getHasResumeAttribute(): bool
+    {
+        $path = $this->resume_path;
+        return !empty($path) && \Illuminate\Support\Facades\Storage::disk('public')->exists($path);
+    }
+
+    public function getResumeExtensionAttribute(): string
+    {
+        $path = $this->resume_path;
+        return $path ? strtolower(pathinfo($path, PATHINFO_EXTENSION)) : 'pdf';
+    }
+
+    public function getResumeFileNameAttribute(): string
+    {
+        $candidateName = $this->applicant ? $this->applicant->full_name : 'Applicant';
+        $ref = $this->reference_code ?: 'APP';
+        $ext = $this->resume_extension ?: 'pdf';
+        return "Resume_{$candidateName}_{$ref}.{$ext}";
+    }
+
+    public function getResumeFileSizeAttribute(): ?string
+    {
+        $path = $this->resume_path;
+        if ($path && \Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+            $bytes = \Illuminate\Support\Facades\Storage::disk('public')->size($path);
+            if ($bytes >= 1048576) {
+                return number_format($bytes / 1048576, 2) . ' MB';
+            } elseif ($bytes >= 1024) {
+                return number_format($bytes / 1024, 1) . ' KB';
+            }
+            return $bytes . ' B';
+        }
+        return null;
+    }
+
+    public function getResumeTypeLabelAttribute(): string
+    {
+        if ($this->custom_resume_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($this->custom_resume_path)) {
+            return 'Position-Specific Custom CV';
+        }
+        if ($this->applicant?->resume_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($this->applicant->resume_path)) {
+            return 'Candidate Profile Master Resume';
+        }
+        return 'Submitted Resume Document';
+    }
 }

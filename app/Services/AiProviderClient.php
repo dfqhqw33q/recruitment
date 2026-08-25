@@ -66,7 +66,7 @@ class AiProviderClient
                 'model' => $this->model,
                 'messages' => $messages,
                 'temperature' => 0.2,
-                'max_tokens' => 1200,
+                'max_tokens' => 2500,
             ];
 
             if (config('ai.json_mode')) {
