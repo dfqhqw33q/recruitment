@@ -27,8 +27,7 @@ class EmployeePortalController extends Controller
         if ($applicant) {
             $application = \App\Models\Application::where('applicant_id', $applicant->id)
                 ->with(['jobPosting.department', 'onboarding'])
-                ->whereIn('status', ['hired', 'offered', 'interviewed', 'screening', 'submitted'])
-                ->orderByRaw("FIELD(status, 'hired', 'offered', 'interviewed', 'screening', 'submitted')")
+                ->orderByRaw("CASE status WHEN 'hired' THEN 1 WHEN 'offered' THEN 2 WHEN 'interviewed' THEN 3 WHEN 'screening' THEN 4 WHEN 'submitted' THEN 5 ELSE 6 END")
                 ->latest()
                 ->first() 
                 ?? \App\Models\Application::where('applicant_id', $applicant->id)
