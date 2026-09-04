@@ -28,6 +28,10 @@ Thumbs.db
 .env.mysql.backup
 .env
 
+# Local browser/session exports
+cookies*.txt
+c2.txt
+
 composer.phar
 composer-setup.php
 .env

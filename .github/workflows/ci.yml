@@ -29,11 +29,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
-          restore-keys: composer-
+          key: composer-dev-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-dev-
 
       - name: Install PHP dependencies
-        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+        run: composer install --optimize-autoloader --no-interaction --prefer-dist
 
       - name: Copy .env
         run: cp .env.example .env
@@ -63,17 +63,18 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
+          extensions: mbstring, pdo, pdo_sqlite, zip, bcmath, intl, opcache
           coverage: none
 
       - name: Cache Composer dependencies
         uses: actions/cache@v4
         with:
           path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
-          restore-keys: composer-
+          key: composer-dev-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-dev-
 
       - name: Install PHP dependencies
-        run: composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+        run: composer install --optimize-autoloader --no-interaction --prefer-dist
 
       - name: Run Laravel Pint (dry-run)
         run: ./vendor/bin/pint --test
