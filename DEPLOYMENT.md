@@ -1,16 +1,8 @@
 # RecruitSmart Deployment Guide
 
-This guide deploys the Laravel and Vue application for free.
-
-Services used:
-
-- GitHub stores the code.
-- Neon stores the PostgreSQL database.
-- Render runs the application.
+This guide covers deployment on a server with PHP, Composer, Node.js, npm, and PostgreSQL available.
 
 ## 1. Push the code to GitHub
-
-The repository must contain the project files and the `Dockerfile`.
 
 ```powershell
 git add .
@@ -52,27 +44,9 @@ php artisan migrate --force
 
 Do not use `migrate:fresh` on a database with important data. It deletes all tables first.
 
-## 4. Create the Render service
+## 4. Configure production environment values
 
-1. Open https://render.com.
-2. Choose `New` and then `Web Service`.
-3. Select the GitHub repository.
-4. Use these settings:
-
-```text
-Name: recruitment
-Runtime: Docker
-Branch: main
-Region: Ohio
-Root Directory: blank
-Plan: Free
-```
-
-Leave the build and start commands blank. Render uses the repository `Dockerfile`.
-
-## 5. Add Render environment values
-
-In Render, open `Environment` and add these values:
+Set these values in the server environment or `.env` file:
 
 ```text
 APP_NAME=RecruitSmart
@@ -112,9 +86,9 @@ DB_SSLMODE=require
 
 The full connection string belongs in `DB_URL`.
 
-## 6. Create the Laravel app key
+## 5. Create the Laravel app key
 
-Run this on a computer with PHP and Composer:
+Run this on the server or another computer with PHP and Composer:
 
 ```powershell
 composer install
@@ -122,24 +96,19 @@ Copy-Item .env.example .env
 php artisan key:generate --show
 ```
 
-Put the displayed value in Render as `APP_KEY`.
+Put the displayed value in the server environment as `APP_KEY`.
 
-Do not create two `APP_KEY` rows in Render.
+## 6. Deploy
 
-## 7. Deploy
+Run the existing deployment script from the project root on the production server:
 
-Click `Create Web Service` in Render.
-
-Render will build the Docker image, build the Vue files, connect to Neon, and start Laravel.
-
-To redeploy later from the terminal:
-
-```powershell
-$render = "PATH_TO_RENDER.exe"
-& $render deploys create SERVICE_ID --wait --confirm
+```bash
+bash deploy.sh
 ```
 
-Or push a new commit:
+The script enables maintenance mode, pulls the `main` branch, installs Composer and npm dependencies, builds frontend assets, runs migrations, rebuilds Laravel caches, restarts queue workers, and restores the application.
+
+To deploy a new commit:
 
 ```powershell
 git add .
@@ -147,14 +116,12 @@ git commit -m "Update application"
 git push origin main
 ```
 
-Render will deploy the new commit automatically.
+## 7. Test the live app
 
-## 8. Test the live app
-
-Open the Render URL:
+Open the configured application URL:
 
 ```text
-https://YOUR-RENDER-URL.onrender.com
+https://YOUR-APPLICATION-URL
 ```
 
 Test Laravel health:
@@ -165,14 +132,6 @@ https://YOUR-RENDER-URL.onrender.com/up
 
 The page should show `Application up`.
 
-## 9. Important free-plan limits
-
-- Render may sleep when nobody is using the app.
-- Local uploaded files may disappear after a restart.
-- Log mail does not send real emails.
-- Background jobs do not run continuously with the free setup.
-- Store important files in cloud storage before using this for real business data.
-
 ## Common database error
 
 If Render shows `current transaction is aborted`, check Neon first. For a database with no important data, run this in Neon SQL Editor:
@@ -182,6 +141,6 @@ DROP SCHEMA public CASCADE;
 CREATE SCHEMA public;
 ```
 
-Then run `php artisan migrate:fresh --seed --force` and redeploy.
+Then run `php artisan migrate:fresh --seed --force` and rerun `deploy.sh`.
 
 Do not run this command on a database that contains important data.

@@ -11,11 +11,15 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         $users = [
-            ['name' => 'Super Admin', 'email' => 'admin@recruit.test', 'role' => 'Super Admin', 'phone' => '09171234567'],
-            ['name' => 'HR Admin', 'email' => 'hr@recruit.test', 'role' => 'HR Administrator', 'phone' => '09172222222'],
-            ['name' => 'Recruitment Officer', 'email' => 'officer@recruit.test', 'role' => 'Recruitment Officer', 'phone' => '09173333333'],
-            ['name' => 'IT Department Head', 'email' => 'ithead@recruit.test', 'role' => 'Department Head', 'phone' => '09174444444'],
-            ['name' => 'Finance Department Head', 'email' => 'finhead@recruit.test', 'role' => 'Department Head', 'phone' => '09175555555'],
+            ['name' => 'Super Admin', 'email' => 'admin@hiraya.com', 'role' => 'Super Admin'],
+            ['name' => 'HR Administrator', 'email' => 'hr@hiraya.com', 'role' => 'HR Administrator'],
+            ['name' => 'Recruitment Officer', 'email' => 'recruitment@hiraya.com', 'role' => 'Recruitment Officer'],
+            ['name' => 'Tour Operations Head', 'email' => 'tours.head@hiraya.com', 'role' => 'Department Head'],
+            ['name' => 'Ticketing & Visa Head', 'email' => 'visa.head@hiraya.com', 'role' => 'Department Head'],
+            ['name' => 'Sales & Travel Head', 'email' => 'sales.head@hiraya.com', 'role' => 'Department Head'],
+            ['name' => 'Carlos Sainz', 'email' => 'carlos@gmail.com', 'role' => 'Employee'],
+            ['name' => 'Samantha Tan', 'email' => 'samantha.tan@gmail.com', 'role' => 'Employee'],
+            ['name' => 'Ramon Bautista', 'email' => 'ramon.bautista@gmail.com', 'role' => 'Employee'],
         ];
 
         foreach ($users as $user) {
@@ -24,7 +28,6 @@ class UserSeeder extends Seeder
             ], [
                 'name' => $user['name'],
                 'password' => Hash::make('password123'),
-                'phone' => $user['phone'],
                 'email_verified_at' => now(),
                 'status' => 'active',
             ]);

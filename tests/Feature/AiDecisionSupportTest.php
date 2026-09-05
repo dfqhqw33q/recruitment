@@ -23,7 +23,7 @@ class AiDecisionSupportTest extends TestCase
 
     public function test_ai_single_recommendation_generation()
     {
-        $hrUser = User::where('email', 'hr@recruit.test')->first();
+        $hrUser = User::where('email', 'hr@hiraya.com')->first();
         $application = Application::first();
 
         $response = $this->actingAs($hrUser)->post(route('recruitment.ai.generate', ['application' => $application->id]));
@@ -49,7 +49,7 @@ class AiDecisionSupportTest extends TestCase
 
     public function test_dashboard_trigger_ai_insights_button()
     {
-        $hrUser = User::where('email', 'hr@recruit.test')->first();
+        $hrUser = User::where('email', 'hr@hiraya.com')->first();
 
         $response = $this->actingAs($hrUser)
             ->from(route('dashboard'))

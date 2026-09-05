@@ -27,10 +27,10 @@ class AuthenticationTest extends TestCase
 
     public function test_users_can_authenticate_with_valid_credentials()
     {
-        $user = User::where('email', 'hr@recruit.test')->first();
+        $user = User::where('email', 'hr@hiraya.com')->first();
 
         $response = $this->post(route('login'), [
-            'email' => 'hr@recruit.test',
+            'email' => 'hr@hiraya.com',
             'password' => 'password123',
         ]);
 
@@ -41,7 +41,7 @@ class AuthenticationTest extends TestCase
     public function test_users_can_not_authenticate_with_invalid_password()
     {
         $this->post(route('login'), [
-            'email' => 'hr@recruit.test',
+            'email' => 'hr@hiraya.com',
             'password' => 'wrong-password',
         ]);
 
@@ -70,7 +70,7 @@ class AuthenticationTest extends TestCase
 
     public function test_authenticated_user_can_logout()
     {
-        $user = User::where('email', 'officer@recruit.test')->first();
+        $user = User::where('email', 'recruitment@hiraya.com')->first();
 
         $response = $this->actingAs($user)->post(route('logout'));
         $this->assertGuest();

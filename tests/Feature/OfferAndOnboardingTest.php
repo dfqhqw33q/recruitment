@@ -23,7 +23,7 @@ class OfferAndOnboardingTest extends TestCase
 
     public function test_hr_can_create_offer_letter()
     {
-        $hrUser = User::where('email', 'hr@recruit.test')->first();
+        $hrUser = User::where('email', 'hr@hiraya.com')->first();
         $application = Application::where('status', '!=', 'hired')->first();
 
         $response = $this->actingAs($hrUser)->post(route('recruitment.offers.store'), [
@@ -70,7 +70,7 @@ class OfferAndOnboardingTest extends TestCase
 
     public function test_hr_can_initiate_onboarding_and_create_employee_profile()
     {
-        $hrUser = User::where('email', 'hr@recruit.test')->first();
+        $hrUser = User::where('email', 'hr@hiraya.com')->first();
         $hiredApplication = Application::first();
         $hiredApplication->update(['status' => 'hired']);
 
@@ -101,7 +101,7 @@ class OfferAndOnboardingTest extends TestCase
 
     public function test_hr_can_manually_update_onboarding_progress_without_forcing_100_percent()
     {
-        $hrUser = User::where('email', 'hr@recruit.test')->first();
+        $hrUser = User::where('email', 'hr@hiraya.com')->first();
         $hiredApplication = Application::first();
         $hiredApplication->update(['status' => 'hired']);
 

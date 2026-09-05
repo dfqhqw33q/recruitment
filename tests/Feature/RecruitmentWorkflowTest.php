@@ -25,7 +25,7 @@ class RecruitmentWorkflowTest extends TestCase
 
     public function test_hr_can_view_recruitment_dashboard()
     {
-        $hrUser = User::where('email', 'hr@recruit.test')->first();
+        $hrUser = User::where('email', 'hr@hiraya.com')->first();
 
         $response = $this->actingAs($hrUser)->get(route('dashboard'));
         $response->assertStatus(200);
@@ -34,7 +34,7 @@ class RecruitmentWorkflowTest extends TestCase
 
     public function test_hr_can_create_new_job_posting()
     {
-        $hrUser = User::where('email', 'hr@recruit.test')->first();
+        $hrUser = User::where('email', 'hr@hiraya.com')->first();
         $dept = Department::first();
         $pos = JobPosition::first();
 
@@ -73,7 +73,7 @@ class RecruitmentWorkflowTest extends TestCase
 
     public function test_hr_can_shortlist_application()
     {
-        $hrUser = User::where('email', 'hr@recruit.test')->first();
+        $hrUser = User::where('email', 'hr@hiraya.com')->first();
         $application = Application::first();
 
         $response = $this->actingAs($hrUser)->post(route('recruitment.applications.shortlist', ['application' => $application->id]), [
@@ -88,7 +88,7 @@ class RecruitmentWorkflowTest extends TestCase
 
     public function test_hr_can_schedule_interview_and_submit_assessment()
     {
-        $hrUser = User::where('email', 'hr@recruit.test')->first();
+        $hrUser = User::where('email', 'hr@hiraya.com')->first();
         $application = Application::first();
 
         // Schedule Interview
