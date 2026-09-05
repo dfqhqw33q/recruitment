@@ -17,6 +17,8 @@ It creates the complete application schema in dependency order:
 
 The baseline includes the columns used by the models, foreign keys, unique rules, and indexes.
 
+The baseline runs outside one large transaction because Neon pooled connections can mask the first schema error in a large transaction. Each table creation checks whether the table already exists, so an interrupted run can resume safely.
+
 ## Fresh testing database
 
 For a new or disposable testing database:

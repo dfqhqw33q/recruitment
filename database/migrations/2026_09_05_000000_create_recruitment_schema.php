@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    // Neon pooled connections can mask the first schema error inside one large transaction.
+    // Each table is guarded so a failed run can safely resume on the next run.
     public $withinTransaction = false;
 
     public function up(): void
