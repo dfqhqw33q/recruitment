@@ -192,6 +192,7 @@ class CompleteDemoSeeder extends Seeder
             }
             $profile ??= $profileByEmployeeId ?? new EmployeeProfile();
             $profile->fill([
+                'user_id' => $user->id,
                 'department_id' => $position->department_id,
                 'job_position_id' => $position->id,
                 'employee_id' => $definition['employee_id'],
