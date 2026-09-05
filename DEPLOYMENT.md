@@ -36,28 +36,21 @@ postgresql://USER:PASSWORD@HOST/neondb?sslmode=require&channel_binding=require
 
 Keep the password private.
 
-## 3. Import the project database
+## 3. Create the project database
 
-The repository includes the database export at:
-
-```text
-database/recruitment_tt_postgres.sql
-```
-
-Install the packages and set the Neon connection string in the terminal:
+The Laravel migration creates the complete database structure. For a new or reset testing database, use:
 
 ```powershell
-npm install
-$env:NEON_DATABASE_URL="YOUR_FULL_NEON_CONNECTION_STRING"
+php artisan migrate:fresh --seed --force
 ```
 
-Import the tables and sample data:
+For a database that already contains data, use only:
 
 ```powershell
-npm run db:import:neon -- --confirm
+php artisan migrate --force
 ```
 
-This replaces the tables in the selected Neon database. Use it only for a new database or when you intentionally want to replace its data.
+Do not use `migrate:fresh` on a database with important data. It deletes all tables first.
 
 ## 4. Create the Render service
 
@@ -189,6 +182,6 @@ DROP SCHEMA public CASCADE;
 CREATE SCHEMA public;
 ```
 
-Then import the database again and redeploy.
+Then run `php artisan migrate:fresh --seed --force` and redeploy.
 
 Do not run this command on a database that contains important data.

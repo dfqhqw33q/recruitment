@@ -10,7 +10,7 @@
 - PHP 8.2+
 - Node.js 20+
 - Composer 2+
-- MySQL 8+ (or use Docker)
+- PostgreSQL 14+ (or use Docker)
 
 ### Setup
 ```bash
@@ -26,7 +26,7 @@ npm install
 cp .env.example .env
 php artisan key:generate
 
-# 4. Configure your database in .env, then:
+# 4. Configure PostgreSQL in .env, then:
 php artisan migrate --seed
 
 # 5. Build frontend assets
@@ -50,9 +50,8 @@ Open `http://localhost:8000`
 ## 🐳 Docker (Production)
 
 ```bash
-# Copy and configure production environment
-cp .env.production .env
-# Fill in APP_KEY, DB credentials, OPENROUTER_API_KEY, APP_URL
+# Configure production environment variables in your hosting provider
+# Set APP_KEY, PostgreSQL DB_URL, OPENROUTER_API_KEY, and APP_URL
 
 php artisan key:generate --force
 
