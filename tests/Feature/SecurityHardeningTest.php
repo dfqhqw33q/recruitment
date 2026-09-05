@@ -19,6 +19,7 @@ class SecurityHardeningTest extends TestCase
         $response->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
         $this->assertTrue($response->headers->has('Content-Security-Policy'));
+        $this->assertStringContainsString("connect-src 'self' ws: wss: https://cdn.jsdelivr.net", $response->headers->get('Content-Security-Policy'));
     }
 
     public function test_login_rate_limiter_blocks_excessive_attempts(): void

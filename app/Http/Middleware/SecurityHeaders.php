@@ -28,7 +28,7 @@ class SecurityHeaders
                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; " .
                "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; " .
                "img-src 'self' data: https:; " .
-               "connect-src 'self' ws: wss:;";
+               "connect-src 'self' ws: wss: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;";
 
         $response->headers->set('Content-Security-Policy', $csp);
 
