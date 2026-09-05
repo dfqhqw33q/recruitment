@@ -16,6 +16,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 
 class CompleteDemoSeeder extends Seeder
 {
@@ -23,7 +24,17 @@ class CompleteDemoSeeder extends Seeder
 
     public function run(): void
     {
-        $this->call(RoleAndPermissionSeeder::class);
+        $requiredRoles = [
+            'Super Admin',
+            'HR Administrator',
+            'Recruitment Officer',
+            'Department Head',
+            'Applicant',
+            'Employee',
+        ];
+        if (Role::whereIn('name', $requiredRoles)->count() < count($requiredRoles)) {
+            $this->call(RoleAndPermissionSeeder::class);
+        }
 
         DB::transaction(function (): void {
             $departments = $this->seedDepartments();
