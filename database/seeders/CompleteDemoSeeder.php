@@ -13,7 +13,6 @@ use App\Models\JobPosition;
 use App\Models\JobPosting;
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
@@ -36,15 +35,13 @@ class CompleteDemoSeeder extends Seeder
             $this->call(RoleAndPermissionSeeder::class);
         }
 
-        DB::transaction(function (): void {
-            $departments = $this->seedDepartments();
-            $positions = $this->seedPositions($departments);
-            $users = $this->seedUsers();
-            $postings = $this->seedPostings($positions, $users['hr']);
+        $departments = $this->seedDepartments();
+        $positions = $this->seedPositions($departments);
+        $users = $this->seedUsers();
+        $postings = $this->seedPostings($positions, $users['hr']);
 
-            $this->seedEmployeeProfiles($users['employees'], $positions);
-            $this->seedApplicants($users['applicants'], $postings, $users['hr']);
-        });
+        $this->seedEmployeeProfiles($users['employees'], $positions);
+        $this->seedApplicants($users['applicants'], $postings, $users['hr']);
     }
 
     /** @return array<string, Department> */
